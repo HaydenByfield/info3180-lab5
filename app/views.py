@@ -5,9 +5,10 @@ Werkzeug Documentation:  https://werkzeug.palletsprojects.com/
 This file creates your application.
 """
 
-from app import app
-from flask import render_template, request, jsonify, send_file
-from app.forms import MovieForm
+from app import app, db, login_manager
+from flask import render_template, request, jsonify, send_file, redirect, url_for, flash
+from app.forms import LoginForm, MovieForm
+from app.models import UserProfile, MovieProfile
 from werkzeug.utils import secure_filename
 import os
 
@@ -21,14 +22,27 @@ app.config['UPLOAD_FOLDER'] = os.path.join(os.getcwd(), 'uploads')
 @app.route('/')
 def index():
     return jsonify(message="This is the beginning of our API")
-def movieCreate():
+
+@app.route('/api/v1/movies', methods=['POST'])
+def movies():
     form = MovieForm()
     if form.validate_on_submit():
         m_title = form.m_title.data
         m_desc = form.m_desc.data
         m_poster = form.m_poster.data
         filename = secure_filename(m_poster.filename)
-        filename.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        m_poster.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+
+        new_movie = MovieProfile(
+            m_title = m_title,
+            m_desc = m_desc,
+            m_poster = filename
+        )
+        db.session.add(new_movie)
+        db.session.commit()
+        return jsonify({"message": "Movie Successfully Added", "title": m_title, "description" : m_desc, "poster": filename}), 201
+    else:
+        return jsonify({"errors": form.errors}), 400
 
 ###
 # The functions below should be applicable to all Flask apps.
