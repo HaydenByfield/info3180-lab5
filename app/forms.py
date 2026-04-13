@@ -11,5 +11,5 @@ class LoginForm(FlaskForm):
 class MovieForm(FlaskForm):
     m_title = StringField('Movie Title', validators=[DataRequired()])
     m_desc = TextAreaField('Movie Description', validators=[DataRequired()])
-    m_poster = FileField('Movie Poster', validators=[FileRequired(), FileAllowed(['jpg', 'jpeg', 'png', 'gif'], 'Images Only!')])
+    m_poster = FileField('Movie Poster', validators=[FileRequired(), FileAllowed(['jpg', 'jpeg', 'png', 'gif', 'webp'], 'Images Only!')])
     submit = SubmitField('Send')

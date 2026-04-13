@@ -7,6 +7,7 @@ class Config(object):
     """Base Config Object"""
     DEBUG = False
     SECRET_KEY = os.environ.get('SECRET_KEY')
+    WTF_CSRF_HEADERS = ['X-CSRFToken']
     UPLOAD_FOLDER = os.environ.get('UPLOAD_FOLDER')
     MAIL_SERVER = os.environ.get('MAIL_SERVER')
     MAIL_PORT = os.environ.get('MAIL_PORT')

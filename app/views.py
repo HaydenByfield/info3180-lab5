@@ -4,13 +4,14 @@ Jinja2 Documentation:    https://jinja.palletsprojects.com/
 Werkzeug Documentation:  https://werkzeug.palletsprojects.com/
 This file creates your application.
 """
-
+import os
 from app import app, db, login_manager
-from flask import render_template, request, jsonify, send_file, redirect, url_for, flash
+from flask import render_template, request, jsonify, send_file, redirect, url_for, flash, send_from_directory
 from app.forms import LoginForm, MovieForm
 from app.models import UserProfile, MovieProfile
 from werkzeug.utils import secure_filename
-import os
+from flask_wtf.csrf import generate_csrf
+
 
 
 app.config['UPLOAD_FOLDER'] = os.path.join(os.getcwd(), 'uploads')
@@ -23,16 +24,20 @@ app.config['UPLOAD_FOLDER'] = os.path.join(os.getcwd(), 'uploads')
 def index():
     return jsonify(message="This is the beginning of our API")
 
+@app.route('/api/v1/csrf-token', methods=['GET'])
+def get_crsf():
+    return jsonify({'csrf_token': generate_csrf()})
+
 @app.route('/api/v1/movies', methods=['POST'])
 def movies():
     form = MovieForm()
+    print("FORM:", form)
     if form.validate_on_submit():
         m_title = form.m_title.data
         m_desc = form.m_desc.data
         m_poster = form.m_poster.data
         filename = secure_filename(m_poster.filename)
         m_poster.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-
         new_movie = MovieProfile(
             m_title = m_title,
             m_desc = m_desc,
@@ -40,9 +45,26 @@ def movies():
         )
         db.session.add(new_movie)
         db.session.commit()
-        return jsonify({"message": "Movie Successfully Added", "title": m_title, "description" : m_desc, "poster": filename}), 201
-    else:
-        return jsonify({"errors": form.errors}), 400
+    return jsonify({"movies": [{"m_title": new_movie.m_title,"m_desc": new_movie.m_desc,"m_poster": new_movie.m_poster }],"message": "Movie Successfully Added"}), 201
+    
+    
+
+@app.route('/api/v1/movies', methods=['GET'])
+def movieList():
+    movies = MovieProfile.query.all()
+    movie_list = [
+        {
+            "m_title": m.m_title,
+            "m_desc": m.m_desc,
+            "m_poster": m.m_poster
+        } for m in movies
+    ]
+
+    return jsonify({"movies": movie_list}), 200
+
+@app.route("/api/v1/images/<path:filename>")
+def getImage(filename):
+    return send_from_directory(os.path.join(os.getcwd(), app.config['UPLOAD_FOLDER']), filename)
 
 ###
 # The functions below should be applicable to all Flask apps.

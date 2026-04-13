@@ -47,10 +47,6 @@ class MovieProfile(db.Model):
     m_poster = db.Column(db.String(80), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    def __init__ (self, m_title, m_desc, m_poster, created_at):
-        self.m_title = m_title
-        self.m_desc = m_desc
-        self.m_poster = m_poster
     
     def is_authencticated(self):
         return True
